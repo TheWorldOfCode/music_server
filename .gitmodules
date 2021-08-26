@@ -1,0 +1,3 @@
+[submodule "www/mpd"]
+	path = www/mpd
+	url = git@github.com:jimmikristensen/PHP-MPD.git

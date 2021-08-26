@@ -1,0 +1,22 @@
+
+{% extends 'basic.html' %}
+
+{% block content %}
+
+<div class="viewer">
+    <div id="searchbar">
+        <input id="search" type="text" placeholder="Search.."><button class='btn btn-default' onclick="downloader_search()"> Search </button>
+    </div>
+    <div id="result">
+    </div>
+    <div id="download_queue">
+        <h1>Downloading queue</h1>
+    </div>
+</div>
+
+<div id="tageditor" class="modal">
+    <div class="modal-content">
+    </div>
+</div>
+
+{% endblock %}

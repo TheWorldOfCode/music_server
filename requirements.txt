@@ -1,0 +1,6 @@
+flask
+python-mpd2
+youtube-dl
+youtube-search-python
+music-tag
+pydub

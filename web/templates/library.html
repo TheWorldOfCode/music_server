@@ -1,0 +1,79 @@
+{% extends 'basic.html' %}
+
+{% block content %}
+
+
+<div id="Library" class="library">
+    <div id="Status">
+    </div>
+    <h1> Playlists </h1>
+    <ul id="myplaylist">
+    {% for list in playlists %}
+    <li>
+        <span>{{ list }}</span>
+        <button id="playlist_{{ list }}" class="btn_list" onclick="remove(this)">Remove</button>
+        <button id="playlist_{{ list }}" class="btn_list" onclick="add(this)">Add</button>
+    </li>
+        {% endfor %}
+    </ul>
+    
+    <h1>Songs</h1>
+    <ul id="myUL">
+        {% for artist in artists %}
+        <li>
+            <span class="caret">{{ artist }}</span>
+            <button id="artist_{{ artist }}" class="btn_list" onclick="remove(this)">Remove</button>
+            <button id="artist_{{ artist }}" class="btn_list" onclick="add(this)">Add</button>
+            <ul class="nested"></ul>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script type=text/javascript>
+    var toggler = document.getElementsByClassName("caret");
+    var i;
+
+    for (i = 0; i < toggler.length; i++) {
+            toggler[i].addEventListener("click",
+                    function() {
+                            this.parentElement.querySelector(".nested").classList.toggle("active");
+                            this.classList.toggle("caret-down");
+                            var nested = this.parentElement.querySelector(".nested");
+                            var artist = this.innerText
+                            if (nested.getElementsByTagName("li").length == 0)
+                                $.getJSON('/queue', {type: "Album", info: this.innerText}, function(data) {
+                                        function add(item, index) {
+                                                const element = document.createElement("li");
+                                                element.innerHTML = "<span class=\"caret\">" + item + "</span><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn btn-default\" onclick=\"add(this)\">Add</button><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn btn-default\" onclick=\"remove(this)\">Remove</button><ul class=\"nested\"></ul>";
+                                                nested.appendChild(element);
+                                                element.querySelector(".caret").addEventListener("click", function() {
+                                                        this.parentElement.querySelector(".nested").classList.toggle("active");
+                                                        this.classList.toggle("caret-down");
+                                                        var nested = this.parentElement.querySelector(".nested");
+                                                        if (nested.getElementsByTagName("li").length == 0)
+                                                            $.getJSON('/queue', {type: "Title", info: this.innerText}, function(data)
+                                                                    {
+                                                                            for (i = 0; i < data['data'].length; i++){
+                                                                                    info = extract_song_information(data['data'][i])
+                                                                                    const element = document.createElement("li")
+                                                                                    var str = info[1];
+                                                                                    if (typeof info[0] !== "undefined") {
+                                                                                            str = info[0] + " - " + str; 
+                                                                                        }
+
+                                                                                    element.innerHTML = "<span>" + str +"</span><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn btn-default\" onclick=\"add(this)\">Add</button><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn btn-default\" onclick=\"remove(this)\">Remove</button><ul class=\"nested\"></ul>";
+                                                                                    nested.appendChild(element);
+                                                                                }
+                                                                        });
+
+                                                    });
+                                            }
+
+                                        data['data'].forEach(add);
+                                    });
+                        });
+        }
+</script>
+
+{% endblock %}

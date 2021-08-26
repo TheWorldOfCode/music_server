@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Music</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/basic.css') }}">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="{{ url_for('static', filename='js/control.js') }}"></script>
+        <script>
+            setInterval(update, 1000)
+        </script>
+    </head>
+    <body>
+        <div class="header">
+            <div id="current_player" class="player">
+                <div class="player_control"> 
+                    <form>
+                        <button class='btn btn-default' onclick="prev()">Prev</button>
+                        <button id="play_control" class='btn btn-default' onclick="play(this)">Play</button>
+                        <button class='btn btn-default' onclick="next()">Next</button>
+                    </form>
+               </div>
+               <audio controls src="{{ url_for('static', filename='music/test.m4a') }}"> </audio>
+               <div class="player_status" id="player_status"> 
+                   <h1>{{title}}</h1>                
+                   <p>{{artist}}</p>
+               </div> 
+            </div>
+        </div>
+        <div class="nav">
+            <a href="{{ url_for('playlist') }}"><button class='btn btn-default'>Playlist</button></a>
+            <a href="{{ url_for('library') }}"><button class='btn btn-default'>Music library</button></a>
+            <a href="{{ url_for('youtube_downloader') }}">
+                <button class='btn btn-default notification'>
+                    <span> Youtube downloader </span>
+                    <span id="download_status" class="badgeleft">0</span>
+                    <span id="download_done" class="badgeright">0</span>
+                </button>
+            </a>
+        </div>
+        {% block content %}{% endblock %}
+    </body>
+</html>

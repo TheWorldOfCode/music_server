@@ -1,0 +1,88 @@
+{% extends 'basic.html' %}
+
+{% block content %}
+
+<div class="viewer">
+    <div class="control">
+        <div class="playlist_name">
+            <h1 contenteditable="true" id=playlist_name> Unnamed </h1> <button id="saveBtn" hidden=true class='btn btn-default' onclick="save_playlist()">save</button>
+        </div>
+    <div>
+        <form>
+            <a href=# id=suffle><button class='btn btn-default' onclick="suffle()">Suffle</button></a>
+            <a href=# id=random><button class='btn btn-default' onclick="random()">Random</button></a>
+            <a href=# id=reqeat><button class='btn btn-default' onclick="repeat()">Repeat</button></a>
+            <a href=# id=consume><button class='btn btn-default' onclick="consume()">Consume</button></a>
+            <a href=# id=clear><button class='btn btn-default' onclick="clear()">Clear</button></a>
+        </form>
+</div>
+    </div>
+    <table id="playlist" class="playlist">
+        <col class="c1" />
+        <col class="track"/>
+        <col class="c3" />
+        <tr> 
+            <td>Artist</td>
+            <td>Track</td>
+            <td>Title</td>
+            <td>Album</td>
+        </tr>
+        {% for song in playlist.songs %}
+        {% if song._current != False %}
+        <tr class="current" id={{ "song_id-" + song.get_id() }} onclick="popup(this)">
+            {% else %}
+            <tr id={{ "song_id-" + song.get_id() }} onclick="popup(this)">
+                {% endif %}
+                <td>{{ song.get_artist() }}</td>
+                <th>{{ song.get_track() }}</th>
+                <td class="popup">
+                    {{ song.get_title() }}
+                    <span class="popuptext" id="myPopup">
+                        <button class='btn btn-default' onclick="playlist_remove_song({{ song.get_id() }})">Remove</button>
+                        <button class='btn btn-default' onclick="playlist_play_song({{ song.get_id() }})">Play</button>
+                    </span>
+                </td>
+                <td>{{ song.get_album() }}</td>
+            </tr>
+            {% endfor %}
+    </table>
+</div>
+<!--<script src="{{ url_for('static', filename='js/playlist.js') }}">rowhandlers()</script> -->
+<script type=text/javascript>
+    var table = document.getElementById("playlist");
+    var rows = table.getElementsByTagName("tr");
+    for (i = 0; i < rows.length; i++) {
+            var currentRow = table.rows[i];
+            /* var createClickHandler = function(row) {
+   return function() {
+   $.getJSON('/player_control', {status: 'playlist', play: row.id.split("-")[1]}, function(data) {}); 
+   location.reload()
+   };
+   };
+                 */
+            //            currentRow.onclick = createClickHandler(currentRow);
+        }
+
+    $('a#suffle').bind('click', suffle);
+    $('a#random').bind('click', random);
+    $('a#reqeat').bind('click', reqeat);
+    $('a#consume').bind('click', consume);
+    $('a#clear').bind('click', clear);
+
+    (function(doc) {
+            var editContent = doc.getElementById("playlist_name");
+            var saveBtn = doc.getElementById("saveBtn");
+            var original = editContent.innerHTML;
+
+            editContent.addEventListener('keypress', 
+                    function () {
+                            if ( editContent.innerHTML !== original ) {
+                                    saveBtn.disabled = false;
+                                    saveBtn.hidden = false;
+                                }
+                        }
+                );
+        })(document);
+</script>
+
+{% endblock %}
