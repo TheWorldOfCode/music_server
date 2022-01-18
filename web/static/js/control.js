@@ -123,6 +123,15 @@ function add(item) {
     }); 
 }
 
+function download(item) {
+    $.getJSON('/queue', {type: "download", info: item.id}, function(data) {
+        for (var i = 0; i < data['data'].length; i++) {
+            window.open("/download_music/" + data['data'][i], "_wid_" + i);
+        }
+    }); 
+
+}
+
 function remove(item) {
     $.getJSON('/queue', {type: "remove", info: item.id}, function(data) {
         document.getElementById("Status").innerHTML = "<p>" + data['data'] + "</p>";

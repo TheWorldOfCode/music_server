@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:3.10-slim
 
 ENV DEBIAN_FRONTED noninteractive
 
@@ -13,31 +13,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 LABEL maintainer TheWorldOfCode
 LABEL version 0.0.1
 
-RUN apt update && apt install -y mpd \
-                                 python3 \
-                                 build-essential \
-                                 python3-pip \
-                                 ffmpeg \
-               && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir flask python-mpd2 youtube-dl youtube-search-python music-tag pydub
+RUN apt update && apt install -y sqlite3 \
+              && rm -rf /var/lib/apt/lists/*
 
-
-# Install python packages
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-
-ADD requirements.txt /tmp/
-RUN python -m pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt
-
-RUN mkdir /data; mkdir app; mkdir config
-
-RUN rm /etc/mpd.conf && ln -s /config/mpd.conf /etc/mpd.conf
-
-COPY web /app
-VOLUME ["/data", "/config"]
-
-RUN mkdir /run/mpd
-ADD /init /
-ENTRYPOINT ["/init"] 
-
+COPY ./web /app
+VOLUME ["/app/static/music"]
+WORKDIR "/app"
+CMD ["main.py"]
+ENTRYPOINT ["python3"]
 
 # vim: filetype=dockerfile

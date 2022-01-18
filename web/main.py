@@ -1,12 +1,16 @@
 """ """
-from flask import Flask, render_template, request, redirect, url_for
+import logging
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from mpd import MPDClient, ConnectionError
-from audio_control import Song, Playlist, get_artists, get_album_element
-from audio_control import search, download, update_and_tag, DOWNLOAD_FOLDER
-from audio_control import remove_empty_folders, db_update
-from audio_control import ProcessHandler
+from music_server import Song, Playlist 
+from music_server import search, download, update_and_tag, DOWNLOAD_FOLDER
+from music_server import remove_empty_folders, db_update
+from music_server import ProcessHandler
+from music_server import DataBase, NoResult, InvalidQueue
 import json
 import os
+
+MUSIC_DIR = "./static/music"
 
 app = Flask(__name__)
 processHandler: ProcessHandler = ProcessHandler()
@@ -14,6 +18,7 @@ processHandler: ProcessHandler = ProcessHandler()
 PLAYLIST_NAME = "Unnamed"
 
 def connect():
+    pass
     client = MPDClient()
     try:
         client.connect("localhost", 6600)
@@ -25,6 +30,7 @@ def connect():
 
 @app.route("/", methods=["POST", "GET"])
 def playlist():
+    return redirect(url_for("library"))
     client = connect()
     status = client.status()
     current_song: Song = Song()
@@ -50,19 +56,17 @@ def playlist():
 
 @app.route("/library")
 def library():
-    client = connect()
+    global MUSIC_DIR
+    db = DataBase(MUSIC_DIR, "music.db")
 
-    stats = client.stats()
-    if stats.get("songs", 0) == 0:
+    if db.empty():
         return redirect(url_for("youtube_downloader"))
 
     current_song: Song = Song()
-    current_song.get_from_dict(client.currentsong())
 
-    playlists = [l["playlist"] for l in client.listplaylists()]
+    playlists = []
 
-    artist_info = client.list("Artist")
-    artists = get_artists(artist_info)
+    artists = db.get_unique_tag("artist")
 
     return render_template("library.html",
                            title=current_song.get_title_track(),
@@ -183,127 +187,171 @@ def queue():
     :returns: TODO
 
     """
-    global PLAYLIST_NAME
-    client = connect()
+    global PLAYLIST_NAME, MUSIC_DIR
+    db = DataBase(MUSIC_DIR, "music.db")
 
     type = request.args.get('type', "", type=str)
     info: str = request.args.get('info', "", type=str)
 
-    if type == "" or info == "":
-        client.disconnect()
-        return "Error"
+    #if type == "" or info == "":
+    #    client.disconnect()
+    #    return "Error"
+
 
     html = "Error"
     if type == "Album":
-        data = client.list(type, info)
-        html = get_album_element(data)
+         html = db.get_unique_tag("album", {"artist": info})
     elif type == "Title":
-        html = client.find("Album", info)
+        html = db.get_unique_tag(["title", "track"], {"album": info}, ["track"], True)
     elif type == "add":
-        info = info.split("_")
+        pass
+#        info = info.split("_")
 
-        if info[0] == "playlist":
-            PLAYLIST_NAME = info[1]
-        else:
-            PLAYLIST_NAME = "Unnamed"
-
-        if len(info) == 2 and info[0] == "playlist":
-            client.load(info[1])
-            html = "Playing playlist"
-        elif len(info) == 2 and info[0] == "artist":
-            artist = info[1]
-            songs = client.find("artist", artist)
-            if len(songs) != 0:
-                html = "Songs added"
-                for song in songs:
-                    client.add(song["file"])
-            else:
-                html = "Error: Songs not added"
-        elif len(info) == 4:
-            artist = info[1]
-            album = info[3]
-
-            songs = client.find("artist", artist, "album", album)
-            if len(songs) != 0:
-                html = "Songs added"
-                for song in songs:
-                    client.add(song["file"])
-            else:
-                html = "Error: Songs not added"
-        else:
-            artist = info[1]
-            album = info[3]
-            song = info[5]
-
-            songs = client.find("artist", artist, "album", album, "title", song)
-            if len(songs) != 0:
-                html = "Songs added"
-                for song in songs:
-                    client.add(song["file"])
-            else:
-                html = "Error: Songs not added"
+#        if info[0] == "playlist":
+#            PLAYLIST_NAME = info[1]
+#        else:
+#            PLAYLIST_NAME = "Unnamed"
+#
+#        if len(info) == 2 and info[0] == "playlist":
+#            client.load(info[1])
+#            html = "Playing playlist"
+#        elif len(info) == 2 and info[0] == "artist":
+#            artist = info[1]
+#            songs = client.find("artist", artist)
+#            if len(songs) != 0:
+#                html = "Songs added"
+#                for song in songs:
+#                    client.add(song["file"])
+#            else:
+#                html = "Error: Songs not added"
+#        elif len(info) == 4:
+#            artist = info[1]
+#            album = info[3]
+#
+#            songs = client.find("artist", artist, "album", album)
+#            if len(songs) != 0:
+#                html = "Songs added"
+#                for song in songs:
+#                    client.add(song["file"])
+#            else:
+#                html = "Error: Songs not added"
+#        else:
+#            artist = info[1]
+#            album = info[3]
+#            song = info[5]
+#
+#            songs = client.find("artist", artist, "album", album, "title", song)
+#            if len(songs) != 0:
+##                html = "Songs added"
+#                for song in songs:
+#                    client.add(song["file"])
+#            else:
+#                html = "Error: Songs not added"
     elif type == "remove":
         info = info.split("_")
-        if len(info) == 2 and info[0] == "playlist":
-            client.rm(info[1])
-            html = "Playlist removed"
-        elif len(info) == 2 and info[0] == "artist":
-            artist = info[1]
-            songs = client.find("artist", artist)
-            if len(songs) != 0:
-                html = "Songs removed"
-                for song in songs:
-                    os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
-            else:
-                html = "Error: Songs not removed"
-        elif len(info) == 4:
-            artist = info[1]
-            album = info[3]
+        word = {}
+        for i in range(0, len(info), 2):
+            word[info[i]] = info[i + 1]
 
-            songs = client.find("artist", artist, "album", album)
-            if len(songs) != 0:
-                html = "Songs removed"
-                for song in songs:
-                    os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
-            else:
-                html = "Error: Songs not removed"
-        else:
-            artist = info[1]
-            album = info[3]
-            song = info[5]
+        try:
+            results = db.search(word)
+            for song in results:
+                os.remove(os.fsencode(song.get_filename()))
+                db.remove(song.get_filename())
 
-            songs = client.find("artist", artist, "album", album, "title", song)
-            print(songs)
-            if len(songs) != 0:
-                html = "Songs removed"
-                for song in songs:
-                    os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
-            else:
-                html = "Error: Songs not removed"
+            db.save()
+            html = "Songs removed"
+        except NoResult: 
+            logging.error("Queue::remove : No result in database")
+            html = "Error: Songs not removed"
+        except InvalidQueue:
+            logging.error("Queue::remove : Invalid SQL queue")
+            html = "Error: Songs not removed"
+    elif type == "download":
+        info = info.split("_")
+        word = {}
+        for i in range(0, len(info), 2):
+            word[info[i]] = info[i + 1]
 
-        remove_empty_folders(DOWNLOAD_FOLDER)
-        db_update(client, 0)
+        try:
+            results = db.search(word)
+            filenames = []
+            for song in results:
+                filenames.append(song.get_filename().replace("/", "!_!"))
 
-    client.disconnect()
+            html = filenames
+        except NoResult: 
+            logging.error("Queue::remove : No result in database")
+        except InvalidQueue:
+            logging.error("Queue::remove : Invalid SQL queue")
+
+#        if len(info) == 2 and info[0] == "playlist":
+    #            client.rm(info[1])
+    #            html = "Playlist removed"
+    #if len(info) == 2 and info[0] == "artist":
+        #            artist = info[1]
+        #            songs = client.find("artist", artist)
+        #            if len(songs) != 0:
+            #                html = "Songs removed"
+            #                for song in songs:
+                #            os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
+                #            else:
+                    #               html = "Error: Songs not removed"
+                    #elif len(info) == 4:
+                        #    artist = info[1]
+                        #    album = info[3]
+                        #
+                        #            songs = client.find("artist", artist, "album", album)
+                        #            if len(songs) != 0:
+                            #                html = "Songs removed"
+                            #                for song in songs:
+                                #                    os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
+                                #            else:
+                                    #                html = "Error: Songs not removed"
+                                    #        else:
+                                        #            artist = info[1]
+                                        #            album = info[3]
+                                        #            song = info[5]
+                                        #
+                                        #            songs = client.find("artist", artist, "album", album, "title", song)
+                                        #            print(songs)
+                                        #            if len(songs) != 0:
+                                            #                html = "Songs removed"
+                                            #                for song in songs:
+                                                #                    os.remove(os.fsencode(DOWNLOAD_FOLDER + "/" + song['file']))
+                                                #            else:
+                                                    #                html = "Error: Songs not removed"
+
+#        remove_empty_folders(DOWNLOAD_FOLDER)
+#        db_update(client, 0)
+
+#    client.disconnect()
 
     return dict(data=html)
 
+@app.route("/download_music/<filename>")
+def download_music(filename):
+    filename = filename.replace("!_!", "/")
+    print(filename)
+    return send_file(filename, as_attachment=True)
 
 @app.route("/status")
 def status():
     global processHandler, PLAYLIST_NAME
-    client = connect()
+    #client = connect()
 
-    mpd_status = client.status()
+    #mpd_status = client.status()
 
     action = request.args.get('action', "", type=str)
     ret = "nothing"
 
     if action == "song":
-        ret = {"song": client.currentsong(), "status": mpd_status['state']}
+        pass
+    #    ret = {"song": "", "status": ""}
     elif action == "playlist":
-        print(PLAYLIST_NAME)
-        ret = {"name": PLAYLIST_NAME}
+        pass
+    #    print(PLAYLIST_NAME)
+    #    ret = {"name": PLAYLIST_NAME}
     elif action == "downloading":
         if processHandler.count() > 0:
             status = processHandler.status()
@@ -323,10 +371,11 @@ def status():
         else:
             ret = {"running": 0, "finished": 0}
 
-    client.disconnect()
+#    client.disconnect()
 
     return ret
 
 
 if __name__ == "__main__":
+    DataBase(MUSIC_DIR, "music.db")
     app.run(host="0.0.0.0", debug=True)

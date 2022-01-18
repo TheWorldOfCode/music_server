@@ -1,11 +1,13 @@
 """ Song """
+from os import fsencode
+import music_tag
 
 
 class Song():
 
     """ A Song """
 
-    def __init__(self, id=-1, title="", album="", artist="", track=-1):
+    def __init__(self, id=-1, title="", album="", artist="", track=-1, filename=""):
         """TODO: to be defined.
 
         :title: TODO
@@ -18,8 +20,13 @@ class Song():
         self._album = album
         self._artist = artist
         self._track = track
+        self._filename = filename
         self._id = id
         self._current = False
+
+    def get_filename(self) -> str:
+        """ Get the filename """
+        return self._filename
 
     def get_title(self) -> str:
         """ get the title
@@ -127,3 +134,16 @@ class Playlist(object):
             return
 
         self.songs[current_id].set_current()
+
+
+def load_song(filename) -> Song:
+    """ Load Song from file
+        
+        :filename: The file to load
+        :return: The song
+    """
+    file = music_tag.load_file(fsencode(filename))
+
+    return Song(title=str(file["title"]), album=str(file["album"]),
+                artist=str(file["artist"]), track=int(file['tracknumber']))
+
