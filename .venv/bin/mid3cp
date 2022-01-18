@@ -1,4 +1,4 @@
-#!/home/dajak/Documents/myprojects/music_server/.venv/bin/python3
+#!/home/dajak/Documents/myprojects/music_server/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
