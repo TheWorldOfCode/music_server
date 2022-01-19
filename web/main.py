@@ -111,10 +111,9 @@ def downloader_control():
         tp: str = request.args.get("type", "", type=str)
         details = json.loads(request.args.get("details", ""))
 
-        client = connect()
-        update_and_tag(client, details)
+        db = DataBase(MUSIC_DIR, "music.db")
+        update_and_tag(db, details)
 
-        client.disconnect()
     elif action == "tag_editor":
         pid = request.args.get("id", -1, type=int)
 

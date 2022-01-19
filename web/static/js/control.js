@@ -1,7 +1,6 @@
+
 function play(object) {
-    console.log(object);
     $.getJSON('/player_control', {status: "play"}, function(data) {
-        console.log(data);
         object.innerHTML = data["status"];
     }); 
 }
@@ -31,7 +30,6 @@ function consume() {
 }
 
 function clear() {
-    console.log("ENTER");
     $.getJSON('/player_control', {status: "clear"}, function(data) {console.log(data);}); 
     
 }
@@ -123,12 +121,20 @@ function add(item) {
     }); 
 }
 
-function download(item) {
+
+
+function download_music(item) {
     $.getJSON('/queue', {type: "download", info: item.id}, function(data) {
-        for (var i = 0; i < data['data'].length; i++) {
-            window.open("/download_music/" + data['data'][i], "_wid_" + i);
+        function down_each(data) {
+            var filename = data.split("!_!");
+            filename = filename[filename.length - 1];
+            console.log(filename);
+            console.log("/download_music/" + data);
+            fetch("/download_music/" + data) .then(res => res.blob()).then(blob => { saveAs(blob, filename); }); 
         }
-    }); 
+
+        data['data'].forEach(down_each);
+    });
 
 }
 
@@ -171,7 +177,7 @@ function downloader_search() {
     var input = document.getElementById("search");
     var display = document.getElementById("result");
     var queue = input.value;
-    $.getJSON('/youtube_downloader_control', {action: 'search', queue: queue, hits: 2}, 
+    $.getJSON('/youtube_downloader_control', {action: 'search', queue: queue, hits: 10}, 
         function(result) {
             var str = "";
             var list = result.result;
@@ -200,7 +206,6 @@ function youtube_download(type, url, title) {
 }
 
 function open_tag_editor(id) {
-    console.log(id);
     $.getJSON("/youtube_downloader_control", {action: "tag_editor", id: id}, function(result) { console.log(result); tag_editor(result); });
 }
 

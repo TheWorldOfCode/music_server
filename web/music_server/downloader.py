@@ -7,9 +7,9 @@ import music_tag
 from time import sleep
 from pydub import AudioSegment
 from . import helper
+from . import DataBase
 
-
-DOWNLOAD_FOLDER = "/data"
+DOWNLOAD_FOLDER = "./tmp"
 
 
 class SearchError(Exception):
@@ -61,7 +61,7 @@ class YoutubeDownloadLogger():
             print("HALLO")
 
 
-def download(t: str, url: str, queue: str):
+def download(t: str, url: str, queue: str,):
     """
     Download from youtube
 
@@ -115,7 +115,7 @@ def download(t: str, url: str, queue: str):
     return results, logger
 
 
-def update_and_tag(client, tags):
+def update_and_tag(db, tags):
     """ Update the database and the tags for the files """
 
     for file in tags:
@@ -133,7 +133,7 @@ def update_and_tag(client, tags):
         filename = file.get("filename", "")
 
         new_filename = artist + " - " + album + " - " + track + " - " + title + os.path.splitext(filename)[1]
-        path = DOWNLOAD_FOLDER + "/" + artist + "/" + album + "/"
+        path = db._directory + "/" + artist + "/" + album + "/"
 
         new_filename = path + new_filename
 
@@ -162,8 +162,8 @@ def update_and_tag(client, tags):
         f['artist'] = artist
         f.save()
 
+        db.add(new_filename)
+
     # Cleaning up
     helper.remove_empty_folders(DOWNLOAD_FOLDER)
-
-    helper.db_update(client)
 

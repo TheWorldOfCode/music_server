@@ -22,15 +22,16 @@
         {% for artist in artists %}
         <li>
             <span class="caret">{{ artist }}</span>
-            <!--<button id="artist_{{ artist }}" class="btn_list" onclick="download(this)">Download</button>-->
-            <button id="artist_{{ artist }}" class="btn_list" onclick="remove(this)">Remove</button>
-            <button id="artist_{{ artist }}" class="btn_list" onclick="add(this)">Add</button>
+            <!--            <button id="artist_{{ artist }}" class="btn_list" onclick="download_music(this)">D</button> -->
+            <button id="artist_{{ artist }}" class="btn_list" onclick="remove(this)">R</button>
+            <!--            <button id="artist_{{ artist }}" class="btn_list" onclick="add(this)">A</button> -->
             <ul class="nested"></ul>
         </li>
         {% endfor %}
     </ul>
 </div>
 
+<script src="{{ url_for('static', filename='js/FileSaver.js') }}"></script>
 <script type=text/javascript>
     var toggler = document.getElementsByClassName("caret");
     var i;
@@ -46,7 +47,7 @@
                                 $.getJSON('/queue', {type: "Album", info: this.innerText}, function(data) {
                                         function add(item, index) {
                                                 const element = document.createElement("li");
-                                                element.innerHTML = "<span class=\"caret\">" + item + "</span><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"remove(this)\">Remove</button><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"add(this)\">Add</button><ul class=\"nested\"></ul>";
+                                                element.innerHTML = "<span class=\"caret\">" + item + "</span><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"download_music(this)\">D</button><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"remove(this)\">R</button><!--<button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"add(this)\">A</button>--><ul class=\"nested\"></ul>";
                                                 nested.appendChild(element);
                                                 element.querySelector(".caret").addEventListener("click", function() {
                                                         this.parentElement.querySelector(".nested").classList.toggle("active");
@@ -63,7 +64,7 @@
                                                                                             str = info[0] + " - " + str; 
                                                                                         }
 
-                                                                                    element.innerHTML = "<span>" + str +"</span><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"download(this)\">Dowload</button><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"remove(this)\">Remove</button><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"add(this)\">Add</button><ul class=\"nested\"></ul>";
+                                                                                    element.innerHTML = "<span>" + str +"</span><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"download_music(this)\">D</button><button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"remove(this)\">R</button><!--<button id=\"artist_" + artist + "_album_" + item + "_title_" + info[1] + "\" class=\"btn_list\" onclick=\"add(this)\">A</button>--><ul class=\"nested\"></ul>";
                                                                                     nested.appendChild(element);
                                                                                 }
                                                                         });
@@ -71,7 +72,6 @@
                                                     });
                                             }
 
-                                        console.log(data)
                                         data['data'].forEach(add);
                                     });
                         });
