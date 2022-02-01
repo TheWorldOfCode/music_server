@@ -3,6 +3,7 @@
 from youtube_dl import YoutubeDL
 from youtubesearchpython import Search
 import os
+import shutil
 import music_tag
 from time import sleep
 from pydub import AudioSegment
@@ -127,9 +128,9 @@ def update_and_tag(db, tags):
         if album == "":
             album = "Single"
 
-        title = file.get("title", "")
-        artist = file.get("artist", "")
-        track = file.get("track", "")
+        title = file.get("title", "").lstrip().rstrip()
+        artist = file.get("artist", "").lstrip().rstrip()
+        track = file.get("track", "").lstrip().rstrip()
         filename = file.get("filename", "")
 
         new_filename = artist + " - " + album + " - " + track + " - " + title + os.path.splitext(filename)[1]
@@ -138,9 +139,11 @@ def update_and_tag(db, tags):
         new_filename = path + new_filename
 
         if not os.path.exists(path):
+            print("CREATING PATH")
             os.makedirs(path)
 
-        os.rename(os.fsencode(filename), os.fsencode(new_filename))
+        #os.rename(os.fsencode(filename), os.fsencode(new_filename))
+        shutil.move(os.fsencode(filename), os.fsencode(new_filename))
 
         if "m4a" not in new_filename:
             print("CONVERTING FILE")
