@@ -15,6 +15,7 @@ LABEL version 0.0.1
 
 RUN pip install --no-cache-dir flask python-mpd2 youtube-dl youtube-search-python music-tag pydub
 RUN apt update && apt install -y sqlite3 \
+                                 ffmpeg \
               && rm -rf /var/lib/apt/lists/*
 
 COPY ./web /app
