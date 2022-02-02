@@ -1,6 +1,6 @@
 """ """
 import logging
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, session
 from mpd import MPDClient, ConnectionError
 from music_server import Song, Playlist 
 from music_server import search, download, update_and_tag, DOWNLOAD_FOLDER
@@ -14,6 +14,7 @@ MUSIC_DIR = "./static/music"
 
 app = Flask(__name__)
 processHandler: ProcessHandler = ProcessHandler()
+app.secret_key = 'BAD_SECRET_KEY'
 
 PLAYLIST_NAME = "Unnamed"
 
@@ -30,24 +31,21 @@ def connect():
 
 @app.route("/", methods=["POST", "GET"])
 def playlist():
-    return redirect(url_for("library"))
-    client = connect()
-    status = client.status()
-    current_song: Song = Song()
-    current_song.get_from_dict(client.currentsong())
-    playlist_info = client.playlistinfo()
-    print(status)
-    if len(playlist_info) == 0:
+    global MUSIC_DIR    
+    if "playlist" not in session.keys():
         return redirect(url_for("library"))
 
+    current_song: Song = Song()
     current_playlist: Playlist = Playlist()
 
-    if "song" in status:
-        current_playlist.load(playlist_info, status["song"])
-    else:
-        current_playlist.load(playlist_info)
+    db = DataBase(MUSIC_DIR, "music.db")
 
-    client.disconnect()
+    for id in session["playlist"]:
+        songs = db.search({"songid": id})
+        for song in songs:
+            current_playlist.add(song)
+
+
     return render_template("playlist.html",
                            title=current_song.get_title_track(),
                            artist=current_song.get_album_artist(),
@@ -192,60 +190,62 @@ def queue():
     type = request.args.get('type', "", type=str)
     info: str = request.args.get('info', "", type=str)
 
-    #if type == "" or info == "":
-    #    client.disconnect()
-    #    return "Error"
-
 
     html = "Error"
     if type == "Album":
-         html = db.get_unique_tag("album", {"artist": info})
+        html = db.get_unique_tag("album", {"artist": info})
     elif type == "Title":
-        html = db.get_unique_tag(["title", "track"], {"album": info}, ["track"], True)
+        artist = request.args.get("artist", "", type=str)
+        html = db.get_unique_tag(["title", "track"], {"album": info, "artist": artist}, ["track"], True)
     elif type == "add":
-        pass
-#        info = info.split("_")
+        info = info.split("_")
 
-#        if info[0] == "playlist":
-#            PLAYLIST_NAME = info[1]
-#        else:
-#            PLAYLIST_NAME = "Unnamed"
-#
-#        if len(info) == 2 and info[0] == "playlist":
-#            client.load(info[1])
-#            html = "Playing playlist"
-#        elif len(info) == 2 and info[0] == "artist":
-#            artist = info[1]
-#            songs = client.find("artist", artist)
-#            if len(songs) != 0:
-#                html = "Songs added"
-#                for song in songs:
-#                    client.add(song["file"])
-#            else:
-#                html = "Error: Songs not added"
-#        elif len(info) == 4:
-#            artist = info[1]
-#            album = info[3]
-#
-#            songs = client.find("artist", artist, "album", album)
-#            if len(songs) != 0:
-#                html = "Songs added"
-#                for song in songs:
-#                    client.add(song["file"])
-#            else:
-#                html = "Error: Songs not added"
-#        else:
-#            artist = info[1]
-#            album = info[3]
-#            song = info[5]
-#
-#            songs = client.find("artist", artist, "album", album, "title", song)
-#            if len(songs) != 0:
-##                html = "Songs added"
-#                for song in songs:
-#                    client.add(song["file"])
-#            else:
-#                html = "Error: Songs not added"
+        if info[0] == "playlist":
+            pass
+    #            PLAYLIST_NAME = info[1]
+        else:
+            PLAYLIST_NAME = "Unnamed"
+
+            if len(info) == 2 and info[0] == "playlist":
+                pass
+            #            client.load(info[1])
+            #            html = "Playing playlist"
+            elif len(info) == 2 and info[0] == "artist":
+                artist = info[1]
+                songs = db.search({"artist": artist})
+                if len(songs) != 0:
+                    html = "Songs added"
+
+                    if "playlist" not in session.keys():
+                        session["playlist"] = []
+
+                    for song in songs:
+                        session["playlist"].append(song.get_id())
+                else:
+                    html = "Error: Songs not added"
+                            #        elif len(info) == 4:
+                                #            artist = info[1]
+                                #            album = info[3]
+                                #
+                                #            songs = client.find("artist", artist, "album", album)
+                                #            if len(songs) != 0:
+                                    #                html = "Songs added"
+                                    #                for song in songs:
+                                        #                    client.add(song["file"])
+                                        #            else:
+                                            #                html = "Error: Songs not added"
+                                            #        else:
+                                                #            artist = info[1]
+                                                #            album = info[3]
+                                                #            song = info[5]
+                                                #
+                                                #            songs = client.find("artist", artist, "album", album, "title", song)
+                                                #            if len(songs) != 0:
+                                                    ##                html = "Songs added"
+                                                    #                for song in songs:
+                                                        #                    client.add(song["file"])
+                                                        #            else:
+                                                            #                html = "Error: Songs not added"
     elif type == "remove":
         info = info.split("_")
         word = {}

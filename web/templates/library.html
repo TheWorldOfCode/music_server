@@ -24,7 +24,7 @@
             <span class="caret">{{ artist }}</span>
             <!--            <button id="artist_{{ artist }}" class="btn_list" onclick="download_music(this)">D</button> -->
             <button id="artist_{{ artist }}" class="btn_list" onclick="remove(this)">R</button>
-            <!--            <button id="artist_{{ artist }}" class="btn_list" onclick="add(this)">A</button> -->
+            <button id="artist_{{ artist }}" class="btn_list" onclick="add(this)">A</button>
             <ul class="nested"></ul>
         </li>
         {% endfor %}
@@ -44,7 +44,7 @@
                             var nested = this.parentElement.querySelector(".nested");
                             var artist = this.innerText
                             if (nested.getElementsByTagName("li").length == 0)
-                                $.getJSON('/queue', {type: "Album", info: this.innerText}, function(data) {
+                                $.getJSON('/queue', {type: "Album", info: this.innerText, "artist": artist}, function(data) {
                                         function add(item, index) {
                                                 const element = document.createElement("li");
                                                 element.innerHTML = "<span class=\"caret\">" + item + "</span><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"download_music(this)\">D</button><button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"remove(this)\">R</button><!--<button id=\"artist_" + artist + "_album_" + item + "\" class=\"btn_list\" onclick=\"add(this)\">A</button>--><ul class=\"nested\"></ul>";
@@ -54,12 +54,13 @@
                                                         this.classList.toggle("caret-down");
                                                         var nested = this.parentElement.querySelector(".nested");
                                                         if (nested.getElementsByTagName("li").length == 0)
-                                                            $.getJSON('/queue', {type: "Title", info: this.innerText}, function(data)
+                                                            $.getJSON('/queue', {type: "Title", info: this.innerText, "artist": artist}, function(data)
                                                                     {
                                                                             for (i = 0; i < data['data'].length; i++){
                                                                                     info = extract_song_information(data['data'][i])
                                                                                     const element = document.createElement("li")
                                                                                     var str = info[1];
+                                                                                    console.log(info);
                                                                                     if (typeof info[0] !== "undefined") {
                                                                                             str = info[0] + " - " + str; 
                                                                                         }

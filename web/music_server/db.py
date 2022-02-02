@@ -208,7 +208,7 @@ class DataBase(object):
         condinations = []
 
         for key in word.keys():
-            if key in ["title", "artist", "album", "track"]:
+            if key in ["songid", "title", "artist", "album", "track"]:
                 condinations.append(f"{key}=\'{word[key]}\'")
 
         if len(condinations) == 0:

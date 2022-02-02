@@ -87,12 +87,12 @@ class Song():
         self._track = info.get("track", "")
         self._id = info.get("id", "")
 
-    def get_id(self) -> int:
+    def get_id(self) -> str(int):
         """ Get the id of the song
         :returns: The id
 
         """
-        return self._id
+        return str(self._id)
 
     def set_current(self):
         """  Mark the song as the current playing song
@@ -116,6 +116,10 @@ class Playlist(object):
     def __init__(self):
         """TODO: to be defined. """
         self.songs = []
+
+    def add(self, song: Song):
+        """ Add a song to the playlist """
+        self.songs.append(song)
 
     def load(self, list: dict, current_id=-1):
         """ Load playlist
