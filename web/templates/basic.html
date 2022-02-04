@@ -8,7 +8,7 @@
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script src="{{ url_for('static', filename='js/control.js') }}"></script>
         <script>
-            setInterval(update, 1000)
+//            setInterval(update, 1000)
         </script>
     </head>
     <body>
@@ -17,11 +17,13 @@
                 <div class="player_control"> 
                     <form>
                         <button class='btn btn-default' onclick="prev()">Prev</button>
-                        <button id="play_control" class='btn btn-default' onclick="play(this)">Play</button>
+                        <button class='btn btn-default' onclick="play()">Play</button>
                         <button class='btn btn-default' onclick="next()">Next</button>
                     </form>
                </div>
-               <audio controls src="{{ url_for('static', filename='music/test.m4a') }}"> </audio>
+               <audio id="audio"> 
+                   <source id="audioSource" src=""/>
+               </audio>
                <div class="player_status" id="player_status"> 
                    <h1>{{title}}</h1>                
                    <p>{{artist}}</p>

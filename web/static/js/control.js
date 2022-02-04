@@ -1,8 +1,11 @@
 
-function play(object) {
-    $.getJSON('/player_control', {status: "play"}, function(data) {
-        object.innerHTML = data["status"];
-    }); 
+function play() {
+//    var audio = document.getElementById("audio");
+ //   var audioSource = document.getElementById("audioSource");
+  //  console.log(audioSource);
+   // audioSource.src = "/static/music/Nickelback/Single/Nickelback - Single -  - When We Stand Together.m4a";
+//    audio.load();
+  //  console.log(audioSource);
 }
 
 function prev() {

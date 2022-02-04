@@ -63,26 +63,26 @@
             //            currentRow.onclick = createClickHandler(currentRow);
         }
 
-    $('a#suffle').bind('click', suffle);
-    $('a#random').bind('click', random);
-    $('a#reqeat').bind('click', reqeat);
-    $('a#consume').bind('click', consume);
-    $('a#clear').bind('click', clear);
+//    $('a#suffle').bind('click', suffle);
+//    $('a#random').bind('click', random);
+    //$('a#reqeat').bind('click', reqeat);
+ //   $('a#consume').bind('click', consume);
+    //$('a#clear').bind('click', clear);
 
-    (function(doc) {
-            var editContent = doc.getElementById("playlist_name");
-            var saveBtn = doc.getElementById("saveBtn");
-            var original = editContent.innerHTML;
-
-            editContent.addEventListener('keypress', 
-                    function () {
-                            if ( editContent.innerHTML !== original ) {
-                                    saveBtn.disabled = false;
-                                    saveBtn.hidden = false;
-                                }
-                        }
-                );
-        })(document);
+    //(function(doc) {
+            //var editContent = doc.getElementById("playlist_name");
+            //var saveBtn = doc.getElementById("saveBtn");
+            //var original = editContent.innerHTML;
+//
+            //editContent.addEventListener('keypress', 
+                    //function () {
+                            //if ( editContent.innerHTML !== original ) {
+                                    //saveBtn.disabled = false;
+                                    //saveBtn.hidden = false;
+                                //}
+                        //}
+                //);
+        //})(document);
 </script>
 
 {% endblock %}

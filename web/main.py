@@ -32,8 +32,13 @@ def connect():
 @app.route("/", methods=["POST", "GET"])
 def playlist():
     global MUSIC_DIR    
+
+
     if "playlist" not in session.keys():
         return redirect(url_for("library"))
+    elif len(session["playlist"]) == 0:
+        return redirect(url_for("library"))
+    print("playlist", session["playlist"])
 
     current_song: Song = Song()
     current_playlist: Playlist = Playlist()
@@ -56,6 +61,7 @@ def playlist():
 def library():
     global MUSIC_DIR
     db = DataBase(MUSIC_DIR, "music.db")
+
 
     if db.empty():
         return redirect(url_for("youtube_downloader"))
@@ -128,52 +134,41 @@ def downloader_control():
 @app.route('/player_control')
 def player_control():
     global PLAYLIST_NAME
-    client = connect()
-    mpd_status = client.status()
+
     status = request.args.get('status', "", type=str)
 
     ret = "nothing"
     if status == "play":
-        print(mpd_status)
-        if mpd_status['state'] == "play":
-            client.pause(1)
-            ret = {"status": "paused"}
-        elif mpd_status['state'] == "stop":
-            client.play(0)
-            ret = {"status": "play"}
-        else:
-            client.pause(0)
-            ret = {"status": "play"}
+        pass
     elif status == "next":
-        client.next()
+        pass
     elif status == "prev":
-        client.previous()
+        pass
     elif status == "playlist":
         action = request.args.get('action', "", type=str)
         song_id = request.args.get('song', "", type=int)
         if action == "play":
-            client.playid(song_id)
+            pass
         elif action == "remove":
             PLAYLIST_NAME = "Unnamed"
-            client.deleteid(song_id)
+            pass
     elif status == "suffle":
-        client.shuffle()
+        pass
     elif status == "random":
-        client.random((int(mpd_status['random']) + 1) % 2)
+        pass
     elif status == "repeat":
-        client.repeat((int(mpd_status['repeat']) + 1) % 2)
+        pass
+        pass
     elif status == "consume":
-        client.consume((int(mpd_status['consume']) + 1) % 2)
+        pass
     elif status == "clear":
-        client.clear()
+        pass
         ret = url_for("/library")
+        pass
     elif status == "song":
-        ret = client.currentsong()
+        pass
     elif status == "save":
         name = request.args.get("name", "", type=str)
-        client.save(name)
-
-    client.disconnect()
 
     return ret
 
@@ -221,6 +216,8 @@ def queue():
 
                     for song in songs:
                         session["playlist"].append(song.get_id())
+
+                    session.modified = True
                 else:
                     html = "Error: Songs not added"
                             #        elif len(info) == 4:
