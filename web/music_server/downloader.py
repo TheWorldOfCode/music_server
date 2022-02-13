@@ -170,3 +170,40 @@ def update_and_tag(db, tags):
     # Cleaning up
     helper.remove_empty_folders(DOWNLOAD_FOLDER)
 
+def files_to_tag(info):
+    """ Remove duplicates from the list and untracked files """
+    print(info) 
+    files = os.listdir(DOWNLOAD_FOLDER)
+    missing = []
+    
+    def comp(file, info):
+        print(info)
+        if file == info["filename"]:
+            return 1
+
+        return 0
+
+    for file in files:
+        count = 0
+        for tracked in info:
+            if type(tracked) == list:
+                for t in tracked:
+                    count += comp(file, t)
+            else:
+                count += comp(file, tracked)
+
+        if count == 0:
+            missing.append(file)
+
+
+    for file in missing:
+        info.append({
+            "title": file,
+            "album": "",
+            "artist": "",
+            "filename": file,
+            "type": "video",
+            "queue": ""
+        })
+
+    return info

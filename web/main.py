@@ -3,7 +3,7 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
 from mpd import MPDClient, ConnectionError
 from music_server import Song, Playlist 
-from music_server import search, download, update_and_tag, DOWNLOAD_FOLDER
+from music_server import search, download, update_and_tag, DOWNLOAD_FOLDER, files_to_tag
 from music_server import remove_empty_folders, db_update
 from music_server import ProcessHandler
 from music_server import DataBase, NoResult, InvalidQueue
@@ -359,11 +359,14 @@ def status():
                 if "RUNNING" in s:
                     running += 1
                 else:
-                    info = processHandler.get_info(int(s.split(" ")[0]))
-                    job_info.append([info, s.split(" ")[0]])
+                    res = processHandler.join(int(s.split(" ")[0]))
+                    job_info.append(res[0][0])
                     finished += 1
-
-            ret = {"running": running, "finished": finished, "info": job_info}
+            job_info = files_to_tag(job_info)
+            ret = {"running": running, "finished": len(job_info), "info": job_info}
+        elif (os.listdir(DOWNLOAD_FOLDER)):
+            info = files_to_tag([])
+            ret = {"running": 0, "finished": len(info), "info": info}
         else:
             ret = {"running": 0, "finished": 0}
 
