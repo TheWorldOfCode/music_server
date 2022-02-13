@@ -1,5 +1,5 @@
 image=music_server
-version=0.0.1
+version=0.0.2
 
 requirements.txt: build
 	@echo "updated image"
@@ -11,20 +11,14 @@ run:
 	docker run --rm -it \
 		-p 5000:5000 \
 		-v $(shell pwd)/data:/data \
-		-v $(shell pwd)/config:/config \
-		--user $(shell id -u):$(shell id -g) \
 		$(image):$(version)
 
 dev: 
 	docker run --rm -it \
 		-p 5000:5000 \
-		-p 6601:6600 \
-		-p 8001:8000 \
 		-w /web \
-		-v $(shell pwd)/data:/data \
-		-v $(shell pwd)/config:/config \
-		-v $(shell pwd)/web:/app \
-		--user $(shell id -u):$(shell id -g) \
+		-v $(shell pwd)/music:/app/static/music \
+		-v $(shell pwd)/web:/web \
 		$(image):$(version)
 
 
