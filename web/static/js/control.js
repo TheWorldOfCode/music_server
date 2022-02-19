@@ -84,11 +84,13 @@ function downloading_status() {
 
             if (data.finished != "0") {
                 str += "<h1>Downloads</h1>";
-
                 for (var i = 0; i < data.info.length; i++) {
                     str += "<div class=\"hit\"><h1>";
-                    str += data.info[i][0];
-                    str += "<button class=\'btn btn-default\' onclick=\"open_tag_editor(" + data.info[i][1] + ")\">Contiune</button>";
+                    if(data.info[i].title == "")
+                        str += data.info[i].filename;
+                    else
+                        str += data.info[i].title;
+                    str += "<button class=\'btn btn-default\' onclick=\"tag_editor(" + data.info[i] + ")\">Contiune</button>";
                     str += "</h1></div>";
                 }
             }
@@ -177,6 +179,7 @@ function popup(row) {
 
 
 function downloader_search() {
+    console.log("ENTER");
     var input = document.getElementById("search");
     var display = document.getElementById("result");
     var queue = input.value;

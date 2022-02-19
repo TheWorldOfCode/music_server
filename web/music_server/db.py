@@ -62,11 +62,17 @@ class DataBase(object):
                         track text);
             """
             cursor.execute(TABLE)
+
+            TABLE = """ CREATE TABLE download (
+                        download_id integer PRIMARY KEY,
+                        info text NOT NULL
+                     """
+            cursor.execute(TABLE)
         except Error as e:
             logging.error(e)
 
         self.mutex.release()
-        
+
     def load(self, file: str):
         """ Load a database file
 
@@ -81,7 +87,7 @@ class DataBase(object):
             self._conn = db.connect(file)
         except Error as e:
             logging.error(e)
-
+            
         self.mutex.release()
 
     def save(self) -> None:
@@ -94,7 +100,7 @@ class DataBase(object):
         self._conn.commit()
         self.mutex.release()
 
-    def add(self, filename) -> None:
+    def add(self, filename, table="song") -> None:
         """ Add song to database
 
         :filename: TODO
@@ -105,8 +111,8 @@ class DataBase(object):
         cursor = self._conn.cursor()
 
         INSERT = """INSERT INTO song (
-                        filename, modified, artist, album, title, track) VALUES
-                        (?, ?, ?, ?, ?, ?)
+        filename, modified, artist, album, title, track) VALUES
+        (?, ?, ?, ?, ?, ?)
         """
 
         mtime = Path(filename).stat().st_ctime
@@ -189,9 +195,9 @@ class DataBase(object):
                 self.remove(f)
             else:
                 db_filenames.append(f)
-#            elif new_time != t:
-#               self.update_file(f)
-        
+                #            elif new_time != t:
+                    #               self.update_file(f)
+
         for f in fdb.keys():
             if f not in db_filenames:
                 self.add(f)
@@ -205,7 +211,7 @@ class DataBase(object):
         """
         self.mutex.acquire()
         cursor = self._conn.cursor()
-            
+
         condinations = []
 
         for key in word.keys():
@@ -219,7 +225,7 @@ class DataBase(object):
         condination = "SELECT * FROM song WHERE "
         for i in range(len(condinations) -1):
             condination += condinations[i] + " AND "
-        condination += condinations[-1]
+            condination += condinations[-1]
 
         try:
             db = cursor.execute(condination).fetchall()
@@ -236,7 +242,7 @@ class DataBase(object):
         for i, filename, _, ar, al, ti, tr  in db:
             songs.append(Song(id=i, title=ti, album=al, artist=ar, track=tr,
                               filename=filename))
-        self.mutex.release()
+            self.mutex.release()
 
         return songs
 
@@ -252,13 +258,13 @@ class DataBase(object):
             elm = ""
             for i in range(len(tag) - 1):
                 elm += f"{tag[i]}, "
-            elm += tag[-1]
+                elm += tag[-1]
 
             sql = f"SELECT DISTINCT {elm} FROM song"
 
         if filter != None:
             sql += " WHERE "
-            
+
             condinations = []
             for key in filter.keys():
                 if key in ["title", "artist", "album", "track"]:
@@ -274,7 +280,7 @@ class DataBase(object):
 
             for i in range(len(order) - 1):
                 sql += f"{order[i]}, "
-            sql += f"{order[-1]}"
+                sql += f"{order[-1]}"
 
             if asc:
                 sql += " ASC"
@@ -315,7 +321,7 @@ class DataBase(object):
             flag = False
 
         self.mutex.release()
-            
+
         return flag
 
 def get_database() -> DataBase:
@@ -329,7 +335,7 @@ def create_database(directory, db_file):
 def main():
     db = DataBase("/home/dajak/Music", "tests/test.db")
     db.empty()
-    
+
 
 if __name__ == "__main__":
     main()
