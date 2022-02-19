@@ -146,7 +146,11 @@ def load_song(filename) -> Song:
         :filename: The file to load
         :return: The song
     """
-    file = music_tag.load_file(fsencode(filename))
+    try:
+        file = music_tag.load_file(fsencode(filename))
+    except:
+        logging.error(f"load_song, failed to load file {filename}")
+        raise f"Failed to load file {filename}"
 
     return Song(title=str(file["title"]), album=str(file["album"]),
                 artist=str(file["artist"]), track=int(file['tracknumber']))
