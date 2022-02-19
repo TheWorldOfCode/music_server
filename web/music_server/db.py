@@ -87,7 +87,8 @@ class DataBase(object):
             self._conn = db.connect(file)
         except Error as e:
             logging.error(e)
-            self.mutex.release()
+            
+        self.mutex.release()
 
     def save(self) -> None:
         """ Save the database to the file
@@ -226,7 +227,12 @@ class DataBase(object):
             condination += condinations[i] + " AND "
             condination += condinations[-1]
 
-        db = cursor.execute(condination).fetchall()
+        try:
+            db = cursor.execute(condination).fetchall()
+        except Error as e:
+            logging.error(f"Search string {condination}, Error {e}")
+            self.mutex.release()
+            raise NoResult
 
         if len(db) == 0:
             self.mutex.release()
