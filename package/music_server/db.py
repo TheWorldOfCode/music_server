@@ -65,7 +65,12 @@ class DataBase(object):
 
             TABLE = """ CREATE TABLE download (
                         download_id integer PRIMARY KEY,
-                        info text NOT NULL
+                        linked integer,
+                        filename text NOT NULL,
+                        artist text,
+                        album text,
+                        title text NOT NULL,
+                        track text);
                      """
             cursor.execute(TABLE)
         except Error as e:
@@ -99,6 +104,122 @@ class DataBase(object):
         self.mutex.acquire()
         self._conn.commit()
         self.mutex.release()
+
+    def get_tables(self) -> list:
+        """ Get the tables in database """
+        self.mutex.acquire()
+        cursor = self._conn.cursor()
+
+        data = cursor.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+
+        self.mutex.release()
+
+        table = []
+        for t in data:
+            table.append(t[0])
+        
+        return table
+
+    def add_download(self, info) -> None:
+        """ Add a download two database """
+        self.mutex.acquire()
+        cursor = self._conn.cursor()
+
+        if type(info) == list:
+            flag = False
+            id = 0
+            for entry in info:
+
+                if flag:
+                    INSERT = """INSERT INTO download (linked, filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?, ?)"""
+                    data = (id, entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"])
+                    cursor.execute(INSERT, data)
+                else:
+                    INSERT = """INSERT INTO download (filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?)"""
+                    data = (entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"])
+                    cursor.execute(INSERT, data)
+                    flag = True
+                    id = cursor.lastrowid 
+
+        else:
+            INSERT = """INSERT INTO download (filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?)"""
+            data = (info["filename"], info["artist"], info["album"], info["title"], info["track"])
+            cursor.execute(INSERT, data)
+
+        self.mutex.release()
+
+    def count_download(self) -> int:
+        """ Count the number of files downloaded """
+        self.mutex.acquire()
+
+        cursor = self._conn.cursor()
+
+        sql = "SELECT count(*) FROM download"
+
+        count = cursor.execute(sql).fetchall()[0][0]
+
+        self.mutex.release()
+
+        return count
+
+    def get_download_info(self):
+        """ Get info for all entries in download table
+            Only gets the first entry for a playlist/album
+        """
+        self.mutex.acquire()
+        cur = self._conn.cursor()
+
+        SELECT = """SELECT download_id, linked, title FROM download """
+
+        data = cur.execute(SELECT).fetchall()
+
+        if len(data) == 0:
+            self.mutex.release()
+            return []
+
+        d = []
+        for entry in data:
+            if entry[1] is None:
+                d.append(entry)
+
+        self.mutex.release()
+
+        return d
+
+    def get_download(self):
+        """ Get all entries in download table """
+        self.mutex.acquire()
+        cur = self._conn.cursor()
+
+        SELECT = """SELECT * FROM download """
+
+        data = cur.execute(SELECT).fetchall()
+
+        if len(data) == 0:
+            self.mutex.release()
+            return []
+        
+        self.mutex.release()
+
+        return data
+
+    def tag_download(self, index):
+        """ Get info for index and remove it """
+        self.mutex.acquire()
+        cursor = self._conn.cursor() 
+
+        SELECT = f"SELECT * FROM download WHERE download_id={index}"
+
+        data = cursor.execute(SELECT).fetchall()
+
+        DELETE = f"DELETE FROM download WHERE download_id={index}"
+        cursor.execute(DELETE)
+
+        self.mutex.release()
+
+        self.save()
+
+        return data
 
     def add(self, filename, table="song") -> None:
         """ Add song to database

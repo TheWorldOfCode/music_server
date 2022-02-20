@@ -1,5 +1,7 @@
 *.m4a
 *.db
 .venv
-__pycache__
+package/music_server/__pycache__/
+*.pyc
 web/tmp/
+package/music_server.egg-info/

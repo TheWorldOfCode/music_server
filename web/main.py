@@ -333,10 +333,9 @@ def download_music(filename):
 
 @app.route("/status")
 def status():
-    global processHandler, PLAYLIST_NAME
-    #client = connect()
-
-    #mpd_status = client.status()
+    global processHandler, PLAYLIST_NAME, MUSIC_DIR
+    
+    db = DataBase(MUSIC_DIR, "music.db")
 
     action = request.args.get('action', "", type=str)
     ret = "nothing"
@@ -360,13 +359,11 @@ def status():
                     running += 1
                 else:
                     res = processHandler.join(int(s.split(" ")[0]))
-                    job_info.append(res[0][0])
+                    db.add_download(res)
                     finished += 1
-            job_info = files_to_tag(job_info)
-            ret = {"running": running, "finished": len(job_info), "info": job_info}
-        elif (os.listdir(DOWNLOAD_FOLDER)):
-            info = files_to_tag([])
-            ret = {"running": 0, "finished": len(info), "info": info}
+
+             
+            ret = {"running": running, "finished": db.count_download(), "info": job_info}
         else:
             ret = {"running": 0, "finished": 0}
 
