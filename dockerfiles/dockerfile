@@ -11,14 +11,19 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 
 LABEL maintainer TheWorldOfCode
-LABEL version 0.0.1
+LABEL version 0.0.2
 
-RUN pip install --no-cache-dir flask python-mpd2 youtube-dl youtube-search-python music-tag pydub
+RUN python3 -m pip install --no-cache-dir flask youtube-dl youtube-search-python music-tag pydub
 RUN apt update && apt install -y sqlite3 \
                                  ffmpeg \
+                                 curl \
               && rm -rf /var/lib/apt/lists/*
 
+COPY ./package /package
+RUN python3 -m pip install . && rm /package 
 COPY ./web /app
+
+HEALTHCHECK curl --fail http://localhost:5000 || exit 1
 VOLUME ["/app/static/music"]
 WORKDIR "/app"
 CMD ["main.py"]

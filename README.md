@@ -40,3 +40,6 @@ Trasist from mpd to manually handling the files
 - [ ] Check if song is already in database
 - [ ] Progress bar
 - [ ] Error handling
+
+# Issues
+    - There was found that sometimes the app freeze after a download. 

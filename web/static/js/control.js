@@ -81,16 +81,13 @@ function downloading_status() {
         if (window.location.pathname == "/youtube_downloader" ) {
             var info = document.getElementById("download_queue");
             var str = "";
-
+            console.log(data.finished);
             if (data.finished != "0") {
                 str += "<h1>Downloads</h1>";
                 for (var i = 0; i < data.info.length; i++) {
                     str += "<div class=\"hit\"><h1>";
-                    if(data.info[i].title == "")
-                        str += data.info[i].filename;
-                    else
-                        str += data.info[i].title;
-                    str += "<button class=\'btn btn-default\' onclick=\"tag_editor(" + data.info[i] + ")\">Contiune</button>";
+                    str += data.info[i][2];
+                    str += "<button class=\'btn btn-default\' onclick=\"open_tag_editor(" + data.info[i][0] + ")\">Contiune</button>";
                     str += "</h1></div>";
                 }
             }
@@ -212,24 +209,27 @@ function youtube_download(type, url, title) {
 }
 
 function open_tag_editor(id) {
-    $.getJSON("/youtube_downloader_control", {action: "tag_editor", id: id}, function(result) { console.log(result); tag_editor(result); });
+    $.getJSON("/youtube_downloader_control", {action: "tag_editor", id: id}, function(result) { tag_editor(result); });
 }
 
 function tag_editor(result){
+    console.log("Tag editor");
+    console.log(result);
     var editor = document.getElementById("tageditor");
     var content = editor.getElementsByClassName("modal-content")[0];
     var type = result.type;
+    var data = result.data;
     var html = ""
     html +=  "<h1>" +  result.queue + "</h1>";
-    if (type == "video"){
-        var new_title = result.title.replace(/[\[|\(][a-zA-Z0-9 ]+[\]|\)]/g, "");
+    if (type == "single"){
+        var data = data[0];
+        var new_title = data.title.replace(/[\[|\(][a-zA-Z0-9 ]+[\]|\)]/g, "");
         html +=  "<label>Title:</label> <input id=\"title\" type=\"text\" value=\"" + new_title + "\"><p></p>";
-        html +=  "<label>Artist:</label> <input id=\"artist\" type=\"text\" value=\"" + result.artist +"\"><p></p>";
+        html +=  "<label>Artist:</label> <input id=\"artist\" type=\"text\" value=\"" + data.artist +"\"><p></p>";
         html +=  "<label>Album:</label> <input id=\"album\" type=\"text\" value=\"\"><p></p>";
         html +=  "<label>Track:</label> <input id=\"track\" type=\"text\" value=\"\"><p></p>";
-        html += "<span id=\"" + result.filename + "\"></span>";
+        html += "<span id=\"" + data.filename + "\"></span>";
     } else {
-        var data = result;
         var artist = data[0].artist;
         var album = data[0].album;
         html +=  "<label>Artist:</label> <input id=\"artist\" type=\"text\" value=\"" +  artist +"\"><p></p>";
@@ -250,14 +250,13 @@ function tag_editor(result){
     content.innerHTML = html;
 
     editor.style.display = "block";
-
+    console.log("DONE");
 }
 
 function youtube_done(type) {
     var editor = document.getElementById("tageditor");
     var content = editor.getElementsByClassName("modal-content")[0];
-
-    if (type == "video") {
+    if (type == "single") {
         var info = new Array(1);
         var list = content.getElementsByTagName("input");
         var title = list[0].value;
@@ -268,7 +267,7 @@ function youtube_done(type) {
 
         info[0] = {"artist": artist, "album": album, "filename": filename, "track": track, "title": title};
         $.getJSON("/youtube_downloader_control", {action: "tag", "type": type, "details": JSON.stringify(info)}, function(result) { });
-
+        
     } else {
         var list = content.getElementsByTagName("input");
         var filenames = content.getElementsByTagName("span")[0].id.split(",");

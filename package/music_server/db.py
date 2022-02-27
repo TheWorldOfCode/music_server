@@ -70,6 +70,7 @@ class DataBase(object):
                         artist text,
                         album text,
                         title text NOT NULL,
+                        queue text,
                         track text);
                      """
             cursor.execute(TABLE)
@@ -120,33 +121,40 @@ class DataBase(object):
         
         return table
 
-    def add_download(self, info) -> None:
-        """ Add a download two database """
+    def add_download(self, info) -> int:
+        """ Add a download two database 
+            
+            :info: The information is stored in a dictory, which should contain the keys ("filename", "artist", "album", "title", "track")
+            :return: The id for the insert info 
+        """
         self.mutex.acquire()
         cursor = self._conn.cursor()
-
+        id = 0
         if type(info) == list:
             flag = False
-            id = 0
+            
             for entry in info:
 
                 if flag:
-                    INSERT = """INSERT INTO download (linked, filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?, ?)"""
-                    data = (id, entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"])
+                    INSERT = """INSERT INTO download (linked, filename, artist, album, title, track, queue) VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                    data = (id, entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"], entry["queue"])
                     cursor.execute(INSERT, data)
                 else:
-                    INSERT = """INSERT INTO download (filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?)"""
-                    data = (entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"])
+                    INSERT = """INSERT INTO download (filename, artist, album, title, track, queue) VALUES (?, ?, ?, ?, ?, ?)"""
+                    data = (entry["filename"], entry["artist"], entry["album"], entry["title"], entry["track"], entry["queue"])
                     cursor.execute(INSERT, data)
                     flag = True
                     id = cursor.lastrowid 
 
         else:
-            INSERT = """INSERT INTO download (filename, artist, album, title, track) VALUES (?, ?, ?, ?, ?)"""
-            data = (info["filename"], info["artist"], info["album"], info["title"], info["track"])
+            INSERT = """INSERT INTO download (filename, artist, album, title, queue) VALUES (?, ?, ?, ?, ?)"""
+            data = (info["filename"], info["artist"], info["album"], info["title"], info["queue"])
             cursor.execute(INSERT, data)
+            id = cursor.lastrowid
 
         self.mutex.release()
+
+        return id
 
     def count_download(self) -> int:
         """ Count the number of files downloaded """
@@ -208,20 +216,23 @@ class DataBase(object):
         self.mutex.acquire()
         cursor = self._conn.cursor() 
 
-        SELECT = f"SELECT * FROM download WHERE download_id={index}"
+        SELECT = f"SELECT * FROM download WHERE download_id={index} OR linked={index}"
 
         data = cursor.execute(SELECT).fetchall()
 
-        DELETE = f"DELETE FROM download WHERE download_id={index}"
+        DELETE = f"DELETE FROM download WHERE download_id={index} OR linked={index}"
         cursor.execute(DELETE)
 
         self.mutex.release()
 
         self.save()
+        sorted = []
+        for entry in data:
+            sorted.append({"filename": entry[2], "artist": entry[3], "album": entry[4], "title": entry[5], "track": entry[7], "queue": entry[6]})
 
-        return data
+        return sorted
 
-    def add(self, filename, table="song") -> None:
+    def add(self, filename) -> None:
         """ Add song to database
 
         :filename: TODO
@@ -309,7 +320,7 @@ class DataBase(object):
             return
 
         db_filenames = []
-        for f, t in db:
+        for f, _ in db:
             new_time = fdb.get(f, None)
 
             if new_time is None:
@@ -347,7 +358,7 @@ class DataBase(object):
         for i in range(len(condinations) -1):
             condination += condinations[i] + " AND "
             condination += condinations[-1]
-
+        print(condination)
         try:
             db = cursor.execute(condination).fetchall()
         except Error as e:
@@ -396,10 +407,10 @@ class DataBase(object):
 
             sql += condinations[-1]
 
-        if order != None:
+        if order != None :
             sql += " ORDER BY "
 
-            for i in range(len(order) - 1):
+            for i in range(len(order)):
                 sql += f"{order[i]}, "
                 sql += f"{order[-1]}"
 
@@ -407,7 +418,7 @@ class DataBase(object):
                 sql += " ASC"
             else:
                 sql += " DESC"
-
+                
         cursor = self._conn.cursor()
 
         _tags = cursor.execute(sql).fetchall()

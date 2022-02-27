@@ -1,7 +1,6 @@
 """ """
 import logging
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
-from mpd import MPDClient, ConnectionError
 from music_server import Song, Playlist 
 from music_server import search, download, update_and_tag, DOWNLOAD_FOLDER, files_to_tag
 from music_server import remove_empty_folders, db_update
@@ -18,22 +17,11 @@ app.secret_key = 'BAD_SECRET_KEY'
 
 PLAYLIST_NAME = "Unnamed"
 
-def connect():
-    pass
-    client = MPDClient()
-    try:
-        client.connect("localhost", 6600)
-    except ConnectionError:
-        pass
-
-    return client
-
-
 @app.route("/", methods=["POST", "GET"])
 def playlist():
     global MUSIC_DIR    
 
-
+    return redirect(url_for("library"))
     if "playlist" not in session.keys():
         return redirect(url_for("library"))
     elif len(session["playlist"]) == 0:
@@ -87,6 +75,7 @@ def youtube_downloader():
 @app.route("/youtube_downloader_control")
 def downloader_control():
     global processHandler
+    db = DataBase(MUSIC_DIR, "music.db")
     action = request.args.get('action', "", type=str)
 
     ret = ""
@@ -115,19 +104,24 @@ def downloader_control():
         tp: str = request.args.get("type", "", type=str)
         details = json.loads(request.args.get("details", ""))
 
-        db = DataBase(MUSIC_DIR, "music.db")
+        print(tp, details)
         update_and_tag(db, details)
 
     elif action == "tag_editor":
-        pid = request.args.get("id", -1, type=int)
+        id = request.args.get("id", -1, type=int)
 
-        if pid != -1:
-            res = processHandler.join(pid)
-            ret = res[0][0]
+        if(id != -1):
+            ret = db.tag_download(id)
 
-            processHandler.cleanup(pid)
+            type = "playlist"
+            queue = ret[0]["queue"]
+            if len(ret) == 1:
+                type="single"
+
+            ret = {"type": type, "data": ret, "queue": queue}
         else:
             ret = "nothing"
+
     return ret
 
 
@@ -191,6 +185,7 @@ def queue():
         html = db.get_unique_tag("album", {"artist": info})
     elif type == "Title":
         artist = request.args.get("artist", "", type=str)
+ 
         html = db.get_unique_tag(["title", "track"], {"album": info, "artist": artist}, ["track"], True)
     elif type == "add":
         info = info.split("_")
@@ -321,7 +316,6 @@ def queue():
 #        remove_empty_folders(DOWNLOAD_FOLDER)
 #        db_update(client, 0)
 
-#    client.disconnect()
 
     return dict(data=html)
 
@@ -348,30 +342,27 @@ def status():
     #    print(PLAYLIST_NAME)
     #    ret = {"name": PLAYLIST_NAME}
     elif action == "downloading":
+        print("ENTER", db.count_download())
         if processHandler.count() > 0:
             status = processHandler.status()
             running = 0
-            finished = 0
-            job_info = []
 
             for s in status:
                 if "RUNNING" in s:
                     running += 1
                 else:
                     res = processHandler.join(int(s.split(" ")[0]))
-                    db.add_download(res)
-                    finished += 1
+                    db.add_download(res[0][0])
 
-             
-            ret = {"running": running, "finished": db.count_download(), "info": job_info}
+            db.save()  
+            ret = {"running": running, "finished": db.count_download(), "info": db.get_download_info()}
         else:
-            ret = {"running": 0, "finished": 0}
-
-#    client.disconnect()
+            ret = {"running": 0, "finished": db.count_download(), "info": db.get_download_info()}
 
     return ret
 
-
 if __name__ == "__main__":
     DataBase(MUSIC_DIR, "music.db")
+ #   logging.getLogger("werkzeug").disabled = True
+ #   os.environ["WERKZEUG_RUN_MAIN"] = "true"
     app.run(host="0.0.0.0", debug=True)

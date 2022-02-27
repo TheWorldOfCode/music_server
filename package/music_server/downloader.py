@@ -62,13 +62,15 @@ class YoutubeDownloadLogger():
             print("HALLO")
 
 
-def download(t: str, url: str, queue: str,):
+def download(t: str, url: str, queue: str,) -> tuple:
     """
     Download from youtube
 
     :t: The type either video or playlist
     :url: The url for the video
     :queue: What there was seared for
+
+    :return: A tuple contains an either a list or dict and the logger. If returned the list, it would contains a number dicts. Each dict contains information about each song downloaded
 
     """
 
@@ -141,7 +143,7 @@ def update_and_tag(db, tags):
         if not os.path.exists(path):
             print("CREATING PATH")
             os.makedirs(path)
-
+        print(os.getcwd())
         #os.rename(os.fsencode(filename), os.fsencode(new_filename))
         shutil.move(os.fsencode(filename), os.fsencode(new_filename))
 
