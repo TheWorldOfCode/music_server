@@ -1,0 +1,11 @@
+Flask-Migrate
+Flask-SQLAlchemy
+Flask-Cors
+Flask-CeleryExt
+
+redis
+
+youtube-dl
+youtube-search-python
+psycopg2-binary==2.9.1
+music-tag

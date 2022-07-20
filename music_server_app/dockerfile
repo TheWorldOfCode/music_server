@@ -1,0 +1,23 @@
+from node:lts-alpine as builder
+
+RUN mkdir /app
+
+WORKDIR /app
+
+COPY package*.json .
+
+RUN npm install 
+
+COPY . .
+
+RUN npm run build
+
+
+from node:lts-alpine as web
+
+RUN npm install -g http-server
+
+COPY --from=builder /app/dist /app
+
+CMD ["/app", "-p 80"]
+ENTRYPOINT ["http-server"]

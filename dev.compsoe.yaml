@@ -1,0 +1,110 @@
+version: "3"
+
+services:
+  music_server_dev:
+    image: music_server:dev
+    build:
+      dockerfile: dev.dockerfile
+    container_name: music_server_dev
+    environment:
+      - PUID=1000
+      - PGIO=1000
+      - TZ=Europe/Copenhagen
+      - DEFAULT_WORKSPACE=/config
+      - SUDO_PASSWORD="abc"
+    volumes:
+      - .:/config/workspace
+      - ~/Documents/vscode/music_server:/config
+    ports:
+      - 8080:8080
+      - 8443:8443
+  app:
+    build:
+      context: music_server_app
+    image: music_server_app
+    ports:
+      - 80:8081
+    depends_on:
+      - api
+  api:
+    build:
+      context: music_server_flask
+    image: music_server_flask
+    command: /start
+    volumes:
+      - ./music_server_flask:/app
+      - ./tmp:/tmp
+    ports:
+      - 5000:5000
+    env_file:
+      - .env/.dev-sample
+    environment:
+      - FLASK_APP=app
+    depends_on:
+      - redis
+      - db
+
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=flask_celery
+      - POSTGRES_USER=flask_celery
+      - POSTGRES_PASSWORD=flask_celery
+
+  redis:
+    image: redis:6-alpine
+
+  celery_worker:
+    build: 
+      context: music_server_flask
+    image: music_server_celery_worker
+    command: /start-celeryworker
+    volumes:
+      - ./music_server_flask:/app
+      - ./tmp:/tmp
+    env_file:
+      - .env/.dev-sample
+    environment:
+      - FLASK_APP=app
+    depends_on:
+      - redis
+      - db
+
+  celery_beat:
+    build: 
+      context: music_server_flask
+    image: music_server_celery_beat
+    command: /start-celerybeat
+    volumes:
+      - ./music_server_flask:/app
+      - ./tmp:/tmp
+    env_file:
+      - .env/.dev-sample
+    environment:
+      - FLASK_APP=app
+    depends_on:
+      - redis
+      - db
+
+  celery_flower:
+    build: 
+      context: music_server_flask
+    image: music_server_celery_flower
+    command: /start-celeryflower
+    volumes:
+      - ./music_server_flask:/app
+      - ./tmp:/tmp
+    env_file:
+      - .env/.dev-sample
+    environment:
+      - FLASK_APP=app
+    ports:
+      - 5557:5555
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  postgres_data:
