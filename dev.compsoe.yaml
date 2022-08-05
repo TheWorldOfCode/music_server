@@ -21,7 +21,7 @@ services:
   app:
     build:
       context: music_server_app
-    image: music_server_app
+    image: music_server:app
     ports:
       - 80:8081
     depends_on:
@@ -29,7 +29,7 @@ services:
   api:
     build:
       context: music_server_flask
-    image: music_server_flask
+    image: music_server:api
     command: /start
     volumes:
       - ./music_server_flask:/app
@@ -57,9 +57,7 @@ services:
     image: redis:6-alpine
 
   celery_worker:
-    build: 
-      context: music_server_flask
-    image: music_server_celery_worker
+    image: music_server:api
     command: /start-celeryworker
     volumes:
       - ./music_server_flask:/app
@@ -73,9 +71,7 @@ services:
       - db
 
   celery_beat:
-    build: 
-      context: music_server_flask
-    image: music_server_celery_beat
+    image: music_server:api
     command: /start-celerybeat
     volumes:
       - ./music_server_flask:/app
@@ -89,9 +85,7 @@ services:
       - db
 
   celery_flower:
-    build: 
-      context: music_server_flask
-    image: music_server_celery_flower
+    image: music_server:api
     command: /start-celeryflower
     volumes:
       - ./music_server_flask:/app
