@@ -35,6 +35,10 @@ COPY ./flower_start /start-celeryflower
 RUN sed -i 's/\r$//g' /start-celeryflower
 RUN chmod +x /start-celeryflower
 
+COPY ./app.py /app
+COPY ./project/ /app
+COPY ./migrations/ /app
+
 WORKDIR /app
 
 ENTRYPOINT ["/entrypoint"]
