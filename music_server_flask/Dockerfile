@@ -35,9 +35,10 @@ COPY ./flower_start /start-celeryflower
 RUN sed -i 's/\r$//g' /start-celeryflower
 RUN chmod +x /start-celeryflower
 
+RUN mkdir /app
 COPY ./app.py /app
-COPY ./project/ /app
-COPY ./migrations/ /app
+COPY ./project/ /app/project
+COPY ./migrations/ /app/migrations
 
 WORKDIR /app
 
