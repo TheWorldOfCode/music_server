@@ -63,7 +63,7 @@ export default {
 
     methods: {
         async get_downloaded() {
-            const path = "http://192.168.0.16:5000/api/download/downloaded";
+            const path = this.window.location.origin + "/api/download/downloaded";
 
             var response = await axios.get(path, {});
 
@@ -77,7 +77,7 @@ export default {
         },
 
         async search() {
-            const path = "http://192.168.0.16:5000/api/youtube/search";
+            const path = this.window.location.origin + "/api/youtube/search";
 
             const responce = await axios.post(path, {
                 queue: this.queue.queue, 
@@ -88,13 +88,13 @@ export default {
 
         async retry(id) {
 
-            const path = "http://192.168.0.16:5000/api/download/retry"
+            const path = this.window.location.origin + "/api/download/retry"
 
             axios.post(path, {"id": id})
         },
 
         async download(type, url, title) {
-            const path = "http://192.168.0.16:5000/api/youtube/download";
+            const path = this.window.location.origin + "/api/youtube/download";
             axios.post(path, {
                 type: type,
                 url: url,

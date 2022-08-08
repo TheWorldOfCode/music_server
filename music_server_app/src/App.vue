@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     async get_download_status() {
-        const path = "http://192.168.0.16:5000/api/download/status";
+        const path = this.window.location.origin +  "/api/download/status";
         const responce = await axios.get(path, {})
 
         this.download_status = responce.data

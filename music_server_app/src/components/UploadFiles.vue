@@ -45,7 +45,7 @@ export default {
             let formData = new FormData();
             formData.append('file', this.file)
 
-            const path = "http://localhost:5000/api/library/upload"
+            const path = this.window.location.origin + "/api/library/upload"
             axios.post(path, formData, {
                 'Content-Type': 'multipart/form-data'
                 })

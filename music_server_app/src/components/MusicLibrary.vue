@@ -75,7 +75,7 @@ export default {
 
     methods: {
         async get_songs() {
-            const path = "http://192.168.0.16:5000/api/library/songs"
+            const path =  this.window.location.origin + "/api/library/songs"
 
             const responce = await axios.get(path, {})
 
@@ -110,7 +110,7 @@ export default {
         },
 
         async remove_song(song_id) {
-            const path = "http://192.168.0.16:5000/api/library/delete/" + song_id
+            const path = this.window.location.origin + "/api/library/delete/" + song_id
             axios.delete(path);
 
             this.get_songs()
@@ -125,7 +125,7 @@ export default {
         download_file(filename) {
 
             filename = filename.replace("/tmp/", "")
-            const path = "http://192.168.0.16:5000/api/library/download/" + filename
+            const path = this.window.location.origin + "/api/library/download/" + filename
             
             axios({
                 method: "GET",
