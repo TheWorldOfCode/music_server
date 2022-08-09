@@ -18,5 +18,5 @@ RUN npm install -g http-server
 
 COPY --from=builder /app/dist /app
 
-CMD ["/app", "-p 80"]
+CMD ["/app", "-P http://localhost:80?", "-p 80"]
 ENTRYPOINT ["http-server"]

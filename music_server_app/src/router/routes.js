@@ -20,6 +20,6 @@ export default new createRouter({
             path: "/",
             redirect: "/library"
         }
-            
+
     ],
 })

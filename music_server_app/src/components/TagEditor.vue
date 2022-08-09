@@ -52,11 +52,11 @@ export default {
             
             
           if(this.library) {
-            const path = this.window.location.origin + "/api/library/edit" 
+            const path = window.location.origin + "/api/library/edit" 
             axios.post(path, {"data": this.info[0]})
             this.$emit('saved-edit')
           } else {
-            const path = this.window.location.origin + "/api/download/add";
+            const path = window.location.origin + "/api/download/add";
 
             if (this.data.length > 1) {
                 for(var i = 1; i < this.data.length; i++) {

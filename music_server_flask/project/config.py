@@ -9,7 +9,7 @@ class BaseConfig:
     BASE_DIR = Path(__file__).parent
     TESTING = False
 
-    MUSIC_DIR = "/tmp"
+    MUSIC_DIR = os.environ.get("MUSIC_DIR", "/music")
     CORS_HEADERS = 'Content-Type'
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False

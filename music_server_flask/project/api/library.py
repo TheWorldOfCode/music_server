@@ -77,12 +77,12 @@ def upload_song():
 
     f.save(filename)
 
-    file_tags = music_tag.load_file(fscode(filename))
+    file_tags = music_tag.load_file(fsencode(filename))
 
-    song = Song(file_tags["title"], 
-                file_tags["artist"], 
-                file_tags.get("album", ""), 
-                file_tags.get("tracknumber",""), filename)
+    song = Song(str(file_tags["title"]), 
+                str(file_tags["artist"]), 
+                str(file_tags.get("album", "")), 
+                str(file_tags.get("tracknumber","")), filename)
     
     song.rename(song.generate_filename(), overwrite=True)
 

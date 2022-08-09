@@ -7,11 +7,11 @@
     </head>
 
     <nav>
-      <a href="/library">Library</a>
-      <a class="notification" href="/youtube"> Youtube Downloader 
+      <router-link to="/library">Library</router-link>
+      <router-link class="notification" to="/youtube"> Youtube Downloader 
         <span id="download_status" class="badgeleft">{{download_status.running}}</span>
         <span id="donwload_done" class="badgeright">{{download_status.done + download_status.failed}}</span>
-      </a>
+      </router-link>
 
     </nav>
     <router-view> </router-view>
@@ -36,11 +36,10 @@ export default {
   created() {
     this.timer = setInterval(this.get_download_status, 5000);
     this.get_download_status()
-    console.log(window.location.origin)
   },
   methods: {
     async get_download_status() {
-        const path = this.window.location.origin +  "/api/download/status";
+        const path = window.location.origin +  "/api/download/status";
         const responce = await axios.get(path, {})
 
         this.download_status = responce.data

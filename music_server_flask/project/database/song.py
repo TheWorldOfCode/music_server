@@ -70,7 +70,7 @@ class Song(db.Model):
 
         """
         new_name2 = new_name
-        new_name = fscode(app.config["MUSIC_DIR"] + "/" + new_name)
+        new_name = fsencode(app.config["MUSIC_DIR"] + "/" + new_name)
 
         if not path.exists(path.dirname(new_name)):
             mkdir(path.dirname(new_name))
@@ -78,7 +78,7 @@ class Song(db.Model):
         if path.exists(new_name):
             raise RuntimeError("File already exists")
         
-        shutil.move(fscode(app.config["MUSIC_DIR"] + "/" + self.filename), new_name)
+        shutil.move(fsencode(app.config["MUSIC_DIR"] + "/" + self.filename), new_name)
 
         self.filename = new_name2
 
