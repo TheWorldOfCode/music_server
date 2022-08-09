@@ -3,7 +3,7 @@ from flask import current_app as app
 
 import shutil
 import os.path as path
-from os import mkdir, fsencode
+from os import makedirs, fsencode
 
 import music_tag
 
@@ -73,7 +73,7 @@ class Song(db.Model):
         new_name = fsencode(app.config["MUSIC_DIR"] + "/" + new_name)
 
         if not path.exists(path.dirname(new_name)):
-            mkdir(path.dirname(new_name))
+            makedirs(path.dirname(new_name))
         
         if path.exists(new_name):
             raise RuntimeError("File already exists")
