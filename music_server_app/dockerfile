@@ -11,6 +11,11 @@ RUN npm install
 
 RUN npm run build
 
+from builder as development
+
+CMD ["run", "serve"]
+
+ENTRYPOINT ["npm"]
 
 from node:lts-alpine as web
 

@@ -2,10 +2,15 @@ version: "3"
 
 services:
   music_server_dev:
+    build:
+      file: dev.dockerfile
     image: music_server:dev
     build:
       dockerfile: dev.dockerfile
     container_name: music_server_dev
+    networks:
+      - frontend
+      - backend
     environment:
       - PUID=1000
       - PGIO=1000
@@ -15,15 +20,35 @@ services:
     volumes:
       - .:/config/workspace
       - ~/Documents/vscode/music_server:/config
+      - ./tmp:/music
     ports:
       - 8080:8080
       - 8443:8443
+    labels:
+      - 'pihole.url=music-dev.home'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.music_dev.rule=Host(`music-dev.home`)'
+      - 'traefik.http.routers.music_dev.entrypoints=web'
+      - 'traefik.http.services.music_dev.loadbalancer.server.port=8443'
+
   app:
     build:
       context: music_server_app
+      target: development
     image: music_server:app
-    ports:
-      - 80:8081
+    #    ports:
+    #  - 80:8081
+    volumes:
+      - ./music_server_app:/app
+      - ./tmp:/app/public/music
+    networks:
+      - frontend
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.music-app.rule=Host(`music.home`)'
+      - 'traefik.http.routers.music-app.entrypoints=web'
+      - 'traefik.http.services.music-app.loadbalancer.server.port=8080'
+      - 'traefik.docker.network=frontend'
     depends_on:
       - api
   api:
@@ -33,21 +58,33 @@ services:
     command: /start
     volumes:
       - ./music_server_flask:/app
-      - ./tmp:/tmp
+      - ./tmp:/music
     ports:
       - 5000:5000
     env_file:
       - .env/.dev-sample
     environment:
       - FLASK_APP=app
+    networks:
+      - frontend
+      - backend
     depends_on:
       - redis
       - db
+    labels:
+      - 'pihole.url=music.home'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.music-api.rule=(Host(`music.home`) && PathPrefix(`/api`))'
+      - 'traefik.http.routers.music-api.entrypoints=web'
+      - 'traefik.http.services.music-api.loadbalancer.server.port=5000'
+      - 'traefik.docker.network=frontend'
 
   db:
     image: postgres:13-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - backend
     environment:
       - POSTGRES_DB=flask_celery
       - POSTGRES_USER=flask_celery
@@ -55,15 +92,19 @@ services:
 
   redis:
     image: redis:6-alpine
+    networks:
+      - backend
 
   celery_worker:
     image: music_server:api
     command: /start-celeryworker
     volumes:
       - ./music_server_flask:/app
-      - ./tmp:/tmp
+      - ./tmp:/music
     env_file:
       - .env/.dev-sample
+    networks:
+      - backend
     environment:
       - FLASK_APP=app
     depends_on:
@@ -75,9 +116,11 @@ services:
     command: /start-celerybeat
     volumes:
       - ./music_server_flask:/app
-      - ./tmp:/tmp
+      - ./tmp:/music
     env_file:
       - .env/.dev-sample
+    networks:
+      - backend
     environment:
       - FLASK_APP=app
     depends_on:
@@ -89,7 +132,9 @@ services:
     command: /start-celeryflower
     volumes:
       - ./music_server_flask:/app
-      - ./tmp:/tmp
+      - ./tmp:/music
+    networks:
+      - backend
     env_file:
       - .env/.dev-sample
     environment:
@@ -102,3 +147,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: false
